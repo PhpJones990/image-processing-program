@@ -101,6 +101,8 @@ int main(int argc, char *argv[])
         // Skip padding
         fseek(image_ptr, padding, SEEK_CUR);
     }
+
+    fclose(image_ptr);
         
 
     // Processing Part
