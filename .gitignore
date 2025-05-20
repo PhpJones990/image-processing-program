@@ -1,1 +1,5 @@
-bitmap_reader.exe
+bitmap_reader.o
+black_and_white_normal.o
+test_image.bmp
+output_bw_image.bmp
+img_p.exe

@@ -1,37 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#pragma pack(push, 1)
-typedef struct 
-{
-    unsigned char signature[2];
-    unsigned int file_size;
-    unsigned short reserved01;
-    unsigned short reserved02;
-    unsigned int offset_pixel_array;
+#include "data_types.h"
+#include "filters/black_and_white_normal.h"
 
-    unsigned int header_size;
-    int width;
-    int height;
-    unsigned short planes;
-    unsigned short bit_per_pixel;
-    unsigned int compression;
-    unsigned int pixel_data_size;
-    unsigned int x_resolution;
-    unsigned int y_resolution;
-    unsigned int colors_palette;
-    unsigned int imp_colors;
-} BitmapHeader;
-#pragma pack(pop)
-
-typedef struct 
-{
-    unsigned char blue;
-    unsigned char green;
-    unsigned char red;
-} Pixel;
-
-void cleanup_pixel(int width, Pixel ***data);
+void cleanup_pixel(int height, Pixel ***data);
 
 int main(int argc, char *argv[])
 {
@@ -46,6 +19,7 @@ int main(int argc, char *argv[])
     FILE *image_ptr = fopen(argv[1], "rb");
     if (!image_ptr)
     {
+        printf("Failed to Open the Image!\n");
         perror("Failed to Open the Image!\n");
         return -1;
     }
@@ -54,6 +28,7 @@ int main(int argc, char *argv[])
     BitmapHeader header;
     if (fread(&header, sizeof(BitmapHeader), 1, image_ptr) != 1)
     {
+        printf("Failed to Read the Header!\n");
         perror("Failed to Read the Header!\n");
         fclose(image_ptr);
         return -1;
@@ -62,6 +37,7 @@ int main(int argc, char *argv[])
     // Verify BMP file
     if (header.signature[0] != 'B' || header.signature[1] != 'M')
     {
+        printf("Invalid Input! Not a Bitmap file(BMP)!\n");
         perror("Invalid Input! Not a Bitmap file(BMP)!\n");
         fclose(image_ptr);
         return -1;
@@ -70,6 +46,7 @@ int main(int argc, char *argv[])
     // Verify 24 bit uncompressed
     if (header.compression != 0)
     {
+        printf("Not a 24 bitmap file!\n");
         perror("Not a 24 bitmap file!\n");
         fclose(image_ptr);
         return -1;
@@ -80,10 +57,25 @@ int main(int argc, char *argv[])
 
     // Allocate  memory for pixel data
 
-    Pixel **pixels = (Pixel**)(malloc(sizeof(Pixel) * header.height));
+    Pixel **pixels = (Pixel**)(malloc(sizeof(Pixel*) * header.height));
+    if (!pixels)
+    {
+        printf("Failed to allocate memory of Pixel **pixels!\n");
+        perror("Failed to allocate memory of Pixel **pixels!\n");
+        fclose(image_ptr);
+        return -1;
+    }
     for (int i = 0; i < header.height; i++)
     {
         pixels[i] = (Pixel*)(malloc(sizeof(Pixel) * header.width));
+        if (!pixels[i])
+        {
+            printf("Failed to allocate memory of pixel[i]!\n");
+            perror("Failed to allocate memory of pixel[i]!\n");
+            free(pixels);
+            fclose(image_ptr);
+            return -1;
+        }
     }
 
     // Read raw pixel dat
@@ -93,9 +85,10 @@ int main(int argc, char *argv[])
         {
             if (fread(&pixels[y][x], sizeof(Pixel), 1, image_ptr) != 1)
             {
+                printf("Failed to Read Pixel data!\n");
                 perror("Failed to Read Pixel data!\n");
                 // Clean up
-                cleanup_pixel(header.width, &pixels);
+                cleanup_pixel(header.height, &pixels);
                 fclose(image_ptr);
                 return -2;
             }
@@ -105,24 +98,26 @@ int main(int argc, char *argv[])
     }
 
     fclose(image_ptr);
-        
 
     // Processing Part
+    filter_image(&pixels, header.width, header.height, black_and_white);
 
     // Write the output file
     FILE *output_image = fopen(argv[2], "wb");
     if (!output_image)
     {
+        printf("Failed to open output image file!\n");
         perror("Failed to open output image file!\n");
-        cleanup_pixel(header.width, &pixels);
+        cleanup_pixel(header.height, &pixels);
         return -1;
     }
 
     // write header
     if (fwrite(&header, sizeof(BitmapHeader), 1, output_image) != 1)
     {
+        printf("Failed to write header to output image file!\n");
         perror("Failed to write header to output image file!\n");
-        cleanup_pixel(header.width, &pixels);
+        cleanup_pixel(header.height, &pixels);
         fclose(output_image);
         return -1;
     }
@@ -134,8 +129,9 @@ int main(int argc, char *argv[])
         {
             if (fwrite(&pixels[y][x], sizeof(Pixel), 1, output_image) != 1)
             {
+                printf("Failed to write Pixel data to output image file!\n");
                 perror("Failed to write Pixel data to output image file!\n");
-                cleanup_pixel(header.width, &pixels);
+                cleanup_pixel(header.height, &pixels);
                 fclose(output_image);
                 return -1;
             }
@@ -147,8 +143,9 @@ int main(int argc, char *argv[])
         {
             if (fwrite(&padding_data, 1, 1, output_image) != 1)
             {
+                printf("Failed to write padding data!\n");
                 perror("Failed to write padding data!\n");
-                cleanup_pixel(header.width, &pixels);
+                cleanup_pixel(header.height, &pixels);
                 fclose(output_image);
                 return -1;
             }
@@ -156,7 +153,7 @@ int main(int argc, char *argv[])
     }
 
     // Cleanup
-    cleanup_pixel(header.width, &pixels);
+    cleanup_pixel(header.height, &pixels);
     fclose(output_image);
     printf("Image Processed Successfully!\n");
 
@@ -164,9 +161,9 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void cleanup_pixel(int width, Pixel ***data)
+void cleanup_pixel(int height, Pixel ***data)
 {
-    for (int i = 0; i < width; i++) free(*data[i]);
+    for (int i = 0; i < height; i++) free((*data)[i]);
     free(*data);
     *data = NULL;
 }
