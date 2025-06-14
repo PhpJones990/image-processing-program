@@ -3,12 +3,12 @@
 
 #include "../data_types.h"
 
-Pixel black_and_white(Pixel ***p, int width, int height)
+void black_and_white(Pixel ***p, int width, int height)
 {
+    Pixel gray_pixel = {0, 0, 0};
 
     if (!p || !*p) return;
 
-    Pixel gray_pixel;
     for (int y = height - 1; y >= 0; y--)
     {
         if (!(*p)[y]) continue;
@@ -16,11 +16,14 @@ Pixel black_and_white(Pixel ***p, int width, int height)
         for (int x = 0; x < width; x++)
         {
             unsigned char gray_data = (unsigned char)(((*p)[y][x].blue + (*p)[y][x].green + (*p)[y][x].red)/3);
-            Pixel gray_pixel = {gray_data, gray_data, gray_data};
+            gray_pixel.blue = gray_data;
+            gray_pixel.green = gray_data;
+            gray_pixel.red = gray_data;
+            (*p)[y][x] = gray_pixel;
         }
     }
 
-    return gray_pixel;
+    return;
 
 }
 

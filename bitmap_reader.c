@@ -5,7 +5,7 @@
 #include "filters/black_and_white_normal.h"
 
 void cleanup_pixel(int height, Pixel ***data);
-void filter_image(Pixel ***p, int width, int height, Pixel (*filter)(Pixel));
+void filter_image(Pixel ***p, int width, int height, void (*filter)(Pixel***, int, int));
 
 int main(int argc, char *argv[])
 {
@@ -170,17 +170,7 @@ void cleanup_pixel(int height, Pixel ***data)
 }
 
 // This is the filter wrapper function
-void filter_image(Pixel ***p, int width, int height, Pixel (*filter)(Pixel))
+void filter_image(Pixel ***p, int width, int height, void (*filter)(Pixel***, int, int))
 {
-    if (!p || !*p) return;
-
-    for (int y = height - 1; y >= 0; y--)
-    {
-        if (!(*p)[y]) continue;
-
-        for (int x = 0; x < width; x++)
-        {
-            (*p)[y][x] = filter((*p)[y][x]);
-        }
-    }
+    filter(p, width, height);
 }
