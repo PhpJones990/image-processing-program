@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "data_types.h": "c"
+        "data_types.h": "c",
+        "black_and_white_normal.h": "c"
     }
 }
