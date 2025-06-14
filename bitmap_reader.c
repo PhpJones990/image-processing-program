@@ -3,6 +3,7 @@
 
 #include "data_types.h"
 #include "filters/black_and_white_normal.h"
+#include "filters/box_blur.h"
 
 void cleanup_pixel(int height, Pixel ***data);
 void filter_image(Pixel ***p, int width, int height, void (*filter)(Pixel***, int, int));
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
     fclose(image_ptr);
 
     // Processing Part
-    filter_image(&pixels, header.width, header.height, black_and_white);
+    filter_image(&pixels, header.width, header.height, box_blur);
 
     // Write the output file
     FILE *output_image = fopen(argv[2], "wb");

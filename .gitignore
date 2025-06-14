@@ -1,5 +1,7 @@
 bitmap_reader.o
+filters_algo.o
 black_and_white_normal.o
+box_blur.o
 test_image.bmp
 output_file.bmp
 img_p.exe
