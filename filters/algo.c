@@ -1,8 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <math.h> 
 
 #include "../data_types.h"
+#include "algo.h" 
+
+void black_and_white(Pixel ***p, int width, int height)
+{
+    Pixel gray_pixel = {0, 0, 0};
+
+    if (!p || !*p) return;
+
+    for (int y = height - 1; y >= 0; y--)
+    {
+        if (!(*p)[y]) continue;
+
+        for (int x = 0; x < width; x++)
+        {
+            unsigned char gray_data = (unsigned char)(((*p)[y][x].blue + (*p)[y][x].green + (*p)[y][x].red)/3);
+            gray_pixel.blue = gray_data;
+            gray_pixel.green = gray_data;
+            gray_pixel.red = gray_data;
+            (*p)[y][x] = gray_pixel;
+        }
+    }
+
+    return;
+
+}
 
 void box_blur(Pixel ***p, int width, int height)
 {
@@ -45,4 +70,27 @@ void box_blur(Pixel ***p, int width, int height)
     }
 
     return;
+}
+
+void invert_color(Pixel ***p, int width, int height)
+{
+    Pixel inverted_pixel = {0, 0, 0}; 
+
+    if (!p || !*p) return;
+
+    for (int y = height - 1; y >= 0; y--) 
+    {
+        if (!(*p)[y]) continue; 
+        
+        for (int x = 0; x < width; x++) 
+        {
+            // 0 - Blue, 1 - Green, 2 - Red 
+            inverted_pixel.blue = 255 - (*p)[y][x].blue; 
+            inverted_pixel.green = 255 - (*p)[y][x].green; 
+            inverted_pixel.red = 255 - (*p)[y][x].red; 
+            (*p)[y][x] = inverted_pixel; 
+        }
+    }
+
+    return; 
 }

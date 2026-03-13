@@ -2,8 +2,7 @@
 #include <stdlib.h>
 
 #include "data_types.h"
-#include "filters/black_and_white_normal.h"
-#include "filters/box_blur.h"
+#include "filters/algo.h" 
 
 void cleanup_pixel(int height, Pixel ***data);
 void filter_image(Pixel ***p, int width, int height, void (*filter)(Pixel***, int, int));
@@ -21,7 +20,7 @@ int main(int argc, char *argv[])
     FILE *image_ptr = fopen(argv[1], "rb");
     if (!image_ptr)
     {
-        printf("Failed to Open the Image!\n");
+        // printf("Failed to Open the Image!\n");
         perror("Failed to Open the Image!\n");
         return -1;
     }
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
     BitmapHeader header;
     if (fread(&header, sizeof(BitmapHeader), 1, image_ptr) != 1)
     {
-        printf("Failed to Read the Header!\n");
+        // printf("Failed to Read the Header!\n");
         perror("Failed to Read the Header!\n");
         fclose(image_ptr);
         return -1;
@@ -39,7 +38,7 @@ int main(int argc, char *argv[])
     // Verify BMP file
     if (header.signature[0] != 'B' || header.signature[1] != 'M')
     {
-        printf("Invalid Input! Not a Bitmap file(BMP)!\n");
+        // printf("Invalid Input! Not a Bitmap file(BMP)!\n");
         perror("Invalid Input! Not a Bitmap file(BMP)!\n");
         fclose(image_ptr);
         return -1;
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
     // Verify 24 bit uncompressed
     if (header.compression != 0)
     {
-        printf("Not a 24 bitmap file!\n");
+        // printf("Not a 24 bitmap file!\n");
         perror("Not a 24 bitmap file!\n");
         fclose(image_ptr);
         return -1;
@@ -57,12 +56,12 @@ int main(int argc, char *argv[])
     // Calculate Padding
     int padding = (4 - ((3*header.width) % 4)) % 4;
 
-    // Allocate  memory for pixel data
+    // Allocate memory for pixel data
 
     Pixel **pixels = (Pixel**)(malloc(sizeof(Pixel*) * header.height));
     if (!pixels)
     {
-        printf("Failed to allocate memory of Pixel **pixels!\n");
+        // printf("Failed to allocate memory of Pixel **pixels!\n");
         perror("Failed to allocate memory of Pixel **pixels!\n");
         fclose(image_ptr);
         return -1;
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
         pixels[i] = (Pixel*)(malloc(sizeof(Pixel) * header.width));
         if (!pixels[i])
         {
-            printf("Failed to allocate memory of pixel[i]!\n");
+            // printf("Failed to allocate memory of pixel[i]!\n");
             perror("Failed to allocate memory of pixel[i]!\n");
             free(pixels);
             fclose(image_ptr);
@@ -80,7 +79,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Read raw pixel dat
+    // Read raw pixel data 
     for (int y = header.height - 1; y >= 0; y--)
     {
         for (int x = 0; x < header.width; x++)
@@ -102,9 +101,9 @@ int main(int argc, char *argv[])
     fclose(image_ptr);
 
     // Processing Part
-    filter_image(&pixels, header.width, header.height, box_blur);
+    filter_image(&pixels, header.width, header.height, invert_color);
 
-    // Write the output file
+    // Create the output file
     FILE *output_image = fopen(argv[2], "wb");
     if (!output_image)
     {
